@@ -18,7 +18,7 @@ public class TwitterAnalytics {
 	public static void main(String[] args) throws Exception {  
 		Configuration conf = new Configuration(); 
 		
-		
+		/*
 		Job job = Job.getInstance(conf, "TwitterAnalytics"); 
 		job.setJarByClass(TwitterAnalytics.class); 
 		job.setMapperClass(RawDataMapper.class);
@@ -49,6 +49,22 @@ public class TwitterAnalytics {
 		FileOutputFormat.setOutputPath(analysisJob, outputPath);
 		
 		analysisJob.waitForCompletion(true);
+		*/
+		
+		
+		Job tweetJob = Job.getInstance(conf, "TwitterAnalytics"); 
+		tweetJob.setJarByClass(TwitterAnalytics.class); 
+		tweetJob.setMapperClass(TweetMapper.class);
+		tweetJob.setReducerClass(TweetReducer.class); 
+		tweetJob.setOutputKeyClass(Text.class); 
+		tweetJob.setOutputValueClass(Text.class); 
+		Path inputPath = new Path("hdfs://localhost:9000/user/project/input/"); 
+		Path outputPath = new Path("hdfs://localhost:9000/user/project/tweets/");
+		outputPath.getFileSystem(conf).delete(outputPath, true);
+		FileInputFormat.addInputPath(tweetJob, inputPath);
+		FileOutputFormat.setOutputPath(tweetJob, outputPath);
+		
+		tweetJob.waitForCompletion(true);
 		
 
 	} 
