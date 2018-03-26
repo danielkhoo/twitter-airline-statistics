@@ -23,7 +23,6 @@ public class RawDataMapper extends Mapper <LongWritable, Text, Text, IntWritable
 				
 				
 				if(sentiment.equalsIgnoreCase("negative")){
-					
 					//NEGATIVEBYAIRLINE:[airline]:[reason]\t[count]
 					if(!col[15].isEmpty() && !col[15].isEmpty()){
 						tag.set("NEGATIVEBYAIRLINE:"+String.valueOf(col[16])+":"+String.valueOf(col[15]));
@@ -36,18 +35,36 @@ public class RawDataMapper extends Mapper <LongWritable, Text, Text, IntWritable
 					}
 				}
 				else if (sentiment.equalsIgnoreCase("positive")){
-					//AIRLINE-POS:[airline]\t[count]
+					//AIRLINE-POSITIVE:[airline]\t[count]
 					if(!col[16].isEmpty()){
-						tag.set("AIRLINE-POS:"+String.valueOf(col[16]));
+						tag.set("AIRLINE-POSITIVE:"+String.valueOf(col[16]));
+						context.write(tag, one);
+					}
+					if(!col[10].isEmpty()){
+						tag.set("COUNTRY-POSITIVE:"+String.valueOf(col[10]));
 						context.write(tag, one);
 					}
 				}
+				else if(sentiment.equalsIgnoreCase("neutral")){
+					//AIRLINE-NEUTRAL:[airline]\t[count]
+					if(!col[16].isEmpty()){
+						tag.set("AIRLINE-NEUTRAL:"+String.valueOf(col[16]));
+						context.write(tag, one);
+					}
+					if(!col[10].isEmpty()){
+						tag.set("COUNTRY-NEUTRAL:"+String.valueOf(col[10]));
+						context.write(tag, one);
+					}
+				}
+				
 				
 				//Send IPs
 				if(!col[13].isEmpty()){
 					tag.set("IP:"+String.valueOf(col[13]));
 					context.write(tag, one);
 				}
+				
+				
 			}
 
 	}

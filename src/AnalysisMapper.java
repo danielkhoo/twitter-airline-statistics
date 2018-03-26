@@ -16,7 +16,22 @@ public class AnalysisMapper extends Mapper <LongWritable, Text, Text, Text> {
 				throws IOException, InterruptedException {
 			String[] entry = value.toString().split(":");
 			
-			if(entry[0].equalsIgnoreCase("AIRLINE-POS")){
+			if(entry[0].equalsIgnoreCase("AIRLINE-POSITIVE")){
+				t.set(entry[0]);
+				v.set(entry[1]);
+				context.write(t, v);
+			}
+			else if(entry[0].equalsIgnoreCase("AIRLINE-NEUTRAL")){
+				t.set(entry[0]);
+				v.set(entry[1]);
+				context.write(t, v);
+			}
+			else if(entry[0].equalsIgnoreCase("COUNTRY-POSITIVE")){
+				t.set(entry[0]);
+				v.set(entry[1]);
+				context.write(t, v);
+			}
+			else if(entry[0].equalsIgnoreCase("COUNTRY-NEUTRAL")){
 				t.set(entry[0]);
 				v.set(entry[1]);
 				context.write(t, v);

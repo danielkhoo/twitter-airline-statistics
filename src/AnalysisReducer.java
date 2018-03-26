@@ -27,9 +27,14 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 	
 	//For Task 4 
 	private HashMap positiveByAirlineMap = new HashMap<String, Integer>();
+	private HashMap neutralByAirlineMap = new HashMap<String, Integer>();
 	
 	//For Task 7
 	private HashMap IPAddressMap = new HashMap<String, Integer>();
+	
+	//Extras
+	private HashMap positiveByCountry = new HashMap<String, Integer>();
+	private HashMap neutralByCountry = new HashMap<String, Integer>();
 	
 	@Override
 	protected void reduce(Text key, Iterable<Text> values, Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
@@ -93,12 +98,36 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 				}
 			}
 		}
-		else if (entry[0].equalsIgnoreCase("AIRLINE-POS")){
+		else if (entry[0].equalsIgnoreCase("AIRLINE-POSITIVE")){
 			//String airline = entry[1];
 			for(Text t: values){
 				String split[] = t.toString().split("\t");
 				int total = Integer.valueOf(split[1]);
 				positiveByAirlineMap.put(split[0], total);
+			}
+		}
+		else if (entry[0].equalsIgnoreCase("AIRLINE-NEUTRAL")){
+			//String airline = entry[1];
+			for(Text t: values){
+				String split[] = t.toString().split("\t");
+				int total = Integer.valueOf(split[1]);
+				neutralByAirlineMap.put(split[0], total);
+			}
+		}
+		else if (entry[0].equalsIgnoreCase("COUNTRY-POSITIVE")){
+			//String airline = entry[1];
+			for(Text t: values){
+				String split[] = t.toString().split("\t");
+				int total = Integer.valueOf(split[1]);
+				positiveByCountry.put(split[0], total);
+			}
+		}
+		else if (entry[0].equalsIgnoreCase("COUNTRY-NEUTRAL")){
+			//String airline = entry[1];
+			for(Text t: values){
+				String split[] = t.toString().split("\t");
+				int total = Integer.valueOf(split[1]);
+				neutralByCountry.put(split[0], total);
 			}
 		}
 		
@@ -116,15 +145,158 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 	@Override
     public void cleanup(Context context) throws IOException, InterruptedException {
 		
-		top5Reasons(context);
+		//top5Reasons(context);
 		
-		negativeReasonsByCountry(context);
+		//negativeReasonsByCountry(context);
 		
-		top3Airlines(context);
+		//top3Airlines(context);
 		
-		ipAddresses(context);
+		//ipAddresses(context);
+		
+		displayAirlineData(context);
+		
+		displayCountryData(context);
     
     }
+	
+	public void displayAirlineData(Context context) throws IOException, InterruptedException{
+		Iterator it = airlineMap.entrySet().iterator();
+	    while (it.hasNext()) {
+	        Map.Entry pair = (Map.Entry)it.next();
+	        String airline = pair.getKey().toString();
+	        
+	        
+	        //positiveByAirlineMap.get(key).toString()
+	        
+	        HashMap<String,Integer> currentMap = (HashMap)pair.getValue();
+	        LinkedHashMap<String,Integer> sortedMap = sortHashMapByValues(currentMap);
+	        int counter = 0;
+	        int subTotal = 0;
+		    
+		    final Set<String> keys = sortedMap.keySet();
+		    List<String> list = new ArrayList<String>();
+		    
+		    //Get just the bottom 5 aka the largest values in the sortedHashmap
+		    for (final String key : keys) {
+		    	list.add(key);
+		    	subTotal+=Integer.valueOf((int)sortedMap.get(key));
+		    }
+		    Collections.reverse(list); //reverse to show top 5 in decreasing order
+		    
+		    k.set("\n\n====="+airline+"=====");
+		    v.set("");
+		    context.write(k, v);
+		    
+		    k.set("Sentiment\nPOSITIVE");
+		    if(positiveByAirlineMap.containsKey(airline)){
+		    	v.set(positiveByAirlineMap.get(airline).toString()); 
+		    }
+		    else{
+		    	v.set("0"); 
+		    }
+	    	context.write(k, v);
+		    
+		    k.set("NEUTRAL");
+		    if(neutralByAirlineMap.containsKey(airline)){
+		    	v.set(neutralByAirlineMap.get(airline).toString());
+		    }
+		    else{
+		    	v.set("0"); 
+		    }
+		    context.write(k, v);
+		    
+		    k.set("NEGATIVE");
+		    v.set(String.valueOf(subTotal));
+		    context.write(k, v);
+		    
+		    k.set("\nREASONS");
+		    v.set("");
+		    context.write(k, v);
+		    for(final String key : list){
+		    	k.set(key);//show problem eg CSProblem with counter
+		    	v.set(currentMap.get(key).toString()); //show number of problems found
+		    	context.write(k, v);
+		    }
+	        it.remove(); // avoids a ConcurrentModificationException
+	    }
+	}
+	
+	public void displayCountryData(Context context) throws IOException, InterruptedException{
+		//==================== Output Top 5 Complains by Airline ====================
+				k.set("\nNumber of Countries");
+		    	v.set(String.valueOf(countryMap.size()));
+		    	context.write(k, v);
+		    	
+		    	LinkedHashMap<String,Integer> sortedTotalsMap = sortHashMapByValues(totalReasonsByCountryMap);
+		    	final Set<String> totalsKeys = sortedTotalsMap.keySet();
+		    	List<String> totalsList = new ArrayList<String>();
+		    	for (final String key : totalsKeys) {
+			    	totalsList.add(key);
+			    }
+			    Collections.reverse(totalsList);
+		    	String topCountry = totalsList.get(0);
+		    	k.set("Country with most complains: "+topCountry);
+		    	v.set(String.valueOf(totalReasonsByCountryMap.get(topCountry)));
+		    	context.write(k, v);
+		    	
+		    	for (final String countrykey : totalsList) {
+			        
+			        HashMap<String,Integer> currentMap = (HashMap<String,Integer>)countryMap.get(countrykey);
+			        
+			        LinkedHashMap<String,Integer> sortedMap = sortHashMapByValues(currentMap);
+			        int counter = 0;
+			        int subTotal = 0;
+				    
+				    final Set<String> keys = sortedMap.keySet();
+				    List<String> list = new ArrayList<String>();
+				    
+				    //Get just the bottom 5 aka the largest values in the sortedHashmap
+				    for (final String key : keys) {
+				    	list.add(key);
+				    	subTotal+=Integer.valueOf((int)sortedMap.get(key));
+				    	counter++;
+				    }
+				    Collections.reverse(list); //reverse to show top 5 in decreasing order
+				    
+				    k.set("====="+countrykey+"=====");
+				    v.set("");
+				    context.write(k, v);
+				    
+				    k.set("Positive");
+				    if(positiveByCountry.containsKey(countrykey)){
+				    	int num = (int) positiveByCountry.get(countrykey);
+				    	v.set(String.valueOf(num));
+				    }
+				    else{
+				    	v.set("0");
+				    }
+				    context.write(k, v);
+				    
+				    k.set("Neutral");
+				    if(neutralByCountry.containsKey(countrykey)){
+				    	int num = (int) neutralByCountry.get(countrykey);
+				    	v.set(String.valueOf(num));
+				    }
+				    else{
+				    	v.set("0");
+				    }
+				    context.write(k, v);
+				    
+				    k.set("Negative");
+				    v.set(String.valueOf(subTotal));
+				    context.write(k, v);
+				    /*
+				    String reason="";
+				    for(final String key : list){
+				    	reason=key;
+				    	if(reason.equalsIgnoreCase("CSProblem")  || reason.equalsIgnoreCase("badflight")){
+				    		k.set(reason);//show problem eg CSProblem with counter
+					    	v.set(currentMap.get(key).toString()); //show number of problems found
+					    	context.write(k, v);
+				    	}
+				    }*/
+			    }
+	}
 	
 	public void top5Reasons(Context context) throws IOException, InterruptedException{
 		//==================== Output Top 5 Complains by Airline ====================
