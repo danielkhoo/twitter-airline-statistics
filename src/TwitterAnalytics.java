@@ -25,7 +25,9 @@ public class TwitterAnalytics {
 		job.setOutputKeyClass(Text.class); 
 		job.setOutputValueClass(IntWritable.class); 
 		Path inputPath = new Path("hdfs://localhost:9000/user/project/input/"); 
+		//Path inputPath = new Path("oss://ict2107-daniel/input/");
 		Path outputPath = new Path("hdfs://localhost:9000/user/project/temp/");
+		//Path outputPath = new Path("oss://ict2107-daniel/temp/");
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 		FileInputFormat.addInputPath(job, inputPath);
 		FileOutputFormat.setOutputPath(job, outputPath);
@@ -42,7 +44,9 @@ public class TwitterAnalytics {
 		
 		String id = String.valueOf(new Date().getTime());
 		inputPath = new Path("hdfs://localhost:9000/user/project/temp/"); 
+		//inputPath = new Path("oss://ict2107-daniel/temp/");
 		outputPath = new Path("hdfs://localhost:9000/user/project/output/");
+		//outputPath = new Path("oss://ict2107-daniel/output/");
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 		FileInputFormat.addInputPath(analysisJob, inputPath);
 		FileOutputFormat.setOutputPath(analysisJob, outputPath);

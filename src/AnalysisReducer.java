@@ -42,10 +42,13 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		String[] entry = key.toString().split(":");
 		
 		if(entry[0].equalsIgnoreCase("NEGATIVEBYAIRLINE")){
-			String airline = entry[1];
+			
 			
 			for(Text t: values){
-				String[] subValues = t.toString().split("\t");
+				String[] parts = t.toString().split(":");
+				String airline = parts[0];
+				
+				String[] subValues = parts[1].split("\t");
 				String issue = subValues[0];
 				int total = Integer.valueOf(subValues[1]);
 				
@@ -73,9 +76,11 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		//KEY: NEGATIVEBYCOUNTRY:[Code]		VALUE:[Reason] [count]
 		else if (entry[0].equalsIgnoreCase("NEGATIVEBYCOUNTRY")){ 	
 			//Clarify with ZK regarding task 3 whether it need to be by airline/country/reason or just country reason
-			String country = entry[1];
 			for(Text t: values){
-				String[] subValues = t.toString().split("\t");
+				String[] parts = t.toString().split(":");
+				String country = parts[0];
+				
+				String[] subValues = parts[1].toString().split("\t");
 				String issue = subValues[0];
 				int total = Integer.valueOf(subValues[1]);
 					
@@ -98,10 +103,32 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 				}
 			}
 		}
+		else if (entry[0].equalsIgnoreCase("SENTIMENT")){
+			for(Text t: values){
+				String[] parts = t.toString().split(":");
+				String split[] = parts[1].toString().split("\t");
+				int total = Integer.valueOf(split[1]);
+				
+				if(parts[0].equalsIgnoreCase("AIRLINE-POSITIVE")){
+					positiveByAirlineMap.put(split[0], total);
+				}
+				else if(parts[0].equalsIgnoreCase("AIRLINE-NEUTRAL")){
+					neutralByAirlineMap.put(split[0], total);
+				}
+				else if(parts[0].equalsIgnoreCase("COUNTRY-POSITIVE")){
+					positiveByCountry.put(split[0], total);
+				}
+				else if(parts[0].equalsIgnoreCase("COUNTRY-NEUTRAL")){
+					neutralByCountry.put(split[0], total);
+				}
+			}
+		}
+		/*
 		else if (entry[0].equalsIgnoreCase("AIRLINE-POSITIVE")){
 			//String airline = entry[1];
 			for(Text t: values){
-				String split[] = t.toString().split("\t");
+				String[] parts = t.toString().split(":");
+				String split[] = parts[1].toString().split("\t");
 				int total = Integer.valueOf(split[1]);
 				positiveByAirlineMap.put(split[0], total);
 			}
@@ -109,7 +136,8 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		else if (entry[0].equalsIgnoreCase("AIRLINE-NEUTRAL")){
 			//String airline = entry[1];
 			for(Text t: values){
-				String split[] = t.toString().split("\t");
+				String[] parts = t.toString().split(":");
+				String split[] = parts[1].toString().split("\t");
 				int total = Integer.valueOf(split[1]);
 				neutralByAirlineMap.put(split[0], total);
 			}
@@ -117,7 +145,8 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		else if (entry[0].equalsIgnoreCase("COUNTRY-POSITIVE")){
 			//String airline = entry[1];
 			for(Text t: values){
-				String split[] = t.toString().split("\t");
+				String[] parts = t.toString().split(":");
+				String split[] = parts[1].toString().split("\t");
 				int total = Integer.valueOf(split[1]);
 				positiveByCountry.put(split[0], total);
 			}
@@ -125,12 +154,13 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		else if (entry[0].equalsIgnoreCase("COUNTRY-NEUTRAL")){
 			//String airline = entry[1];
 			for(Text t: values){
-				String split[] = t.toString().split("\t");
+				String[] parts = t.toString().split(":");
+				String split[] = parts[1].toString().split("\t");
 				int total = Integer.valueOf(split[1]);
 				neutralByCountry.put(split[0], total);
 			}
 		}
-		
+		*/
 		else if (entry[0].equalsIgnoreCase("IP")){
 			//String airline = entry[1];
 			for(Text t: values){
@@ -144,18 +174,33 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 	
 	@Override
     public void cleanup(Context context) throws IOException, InterruptedException {
+		//check if there is a any values in the relevant hashmap before calling the display function.
 		
-		//top5Reasons(context);
+		if(!airlineMap.isEmpty()){
+			//displayAirlineData(context);
+		}
 		
-		//negativeReasonsByCountry(context);
+		if(!reasonsMap.isEmpty()){
+			top5Reasons(context);
+		}
 		
-		//top3Airlines(context);
 		
-		//ipAddresses(context);
+		if(!totalReasonsByCountryMap.isEmpty()){
+			negativeReasonsByCountry(context);
+			//displayCountryData(context);
+		}
 		
-		displayAirlineData(context);
+		if(!positiveByAirlineMap.isEmpty()){
+			top3Airlines(context);
+		}
 		
-		displayCountryData(context);
+		if(!IPAddressMap.isEmpty()){
+			ipAddresses(context);
+		}
+		
+		
+		
+		
     
     }
 	
