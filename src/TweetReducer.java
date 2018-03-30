@@ -239,9 +239,6 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
 	    		median = trustpoints.get(trustpoints.size()/2);
 	    	}
 	    	
-	    	
-	    	
-	    	
 	    	//Double median = 0.0;//placeholder
 	    	//=============================================================================
 	    	
