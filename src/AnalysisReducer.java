@@ -177,25 +177,25 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		//check if there is a any values in the relevant hashmap before calling the display function.
 		
 		if(!airlineMap.isEmpty()){
-			//displayAirlineData(context);
+			displayAirlineData(context);
 		}
 		
 		if(!reasonsMap.isEmpty()){
-			top5Reasons(context);
+			//top5Reasons(context);
 		}
 		
 		
 		if(!totalReasonsByCountryMap.isEmpty()){
-			negativeReasonsByCountry(context);
-			//displayCountryData(context);
+			//negativeReasonsByCountry(context);
+			displayCountryData(context);
 		}
 		
 		if(!positiveByAirlineMap.isEmpty()){
-			top3Airlines(context);
+			//top3Airlines(context);
 		}
 		
 		if(!IPAddressMap.isEmpty()){
-			ipAddresses(context);
+			//ipAddresses(context);
 		}
 		
 		
@@ -303,6 +303,8 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 				    }
 				    Collections.reverse(list); //reverse to show top 5 in decreasing order
 				    
+				   
+				    
 				    k.set("====="+countrykey+"=====");
 				    v.set("");
 				    context.write(k, v);
@@ -330,6 +332,17 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 				    k.set("Negative");
 				    v.set(String.valueOf(subTotal));
 				    context.write(k, v);
+				    
+				    String reason="";
+				    for(final String key : list){
+				    	reason=key;
+				    	if(reason.equalsIgnoreCase("CSProblem")  || reason.equalsIgnoreCase("badflight")){
+				    		k.set("-"+reason);//show problem eg CSProblem with counter
+					    	v.set(currentMap.get(key).toString()); //show number of problems found
+					    	context.write(k, v);
+				    	}
+				    	
+				    }
 				    /*
 				    String reason="";
 				    for(final String key : list){

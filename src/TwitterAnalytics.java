@@ -18,7 +18,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public class TwitterAnalytics { 
 	public static void main(String[] args) throws Exception {  
 		Configuration conf = new Configuration(); 
-		
+		/*
 		Job job = Job.getInstance(conf, "TwitterAnalytics"); 
 		job.setJarByClass(TwitterAnalytics.class); 
 		job.setMapperClass(RawDataMapper.class);
@@ -54,8 +54,8 @@ public class TwitterAnalytics {
 		
 		analysisJob.waitForCompletion(true);
 		
+		*/
 		
-		/*
 		Job tweetJob = Job.getInstance(conf, "TwitterAnalytics"); 
 		tweetJob.setJarByClass(TwitterAnalytics.class); 
 		tweetJob.setMapperClass(TweetMapper.class);
@@ -71,7 +71,7 @@ public class TwitterAnalytics {
 		FileOutputFormat.setOutputPath(tweetJob, outputPath);
 		
 		tweetJob.waitForCompletion(true);
-		*/
+		
 
 	} 
 }

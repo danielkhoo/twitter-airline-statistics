@@ -128,8 +128,8 @@ public class TweetMapper extends Mapper <LongWritable, Text, Text, Text> {
 				
 				//Send Trustpoint
 				if(!col[8].isEmpty() && !col[16].isEmpty()){
-					t.set("TRUST:"+String.valueOf(col[16]));
-					v.set(col[8]);
+					t.set("TRUST:");
+					v.set(String.valueOf(col[16])+":"+col[8]);
 					context.write(t, v);
 				}
 				
@@ -184,7 +184,7 @@ public class TweetMapper extends Mapper <LongWritable, Text, Text, Text> {
 						else{
 							result = "mismatch";
 						}
-						v.set(result+":"+col[17]+":"+sentiment.toString());
+						v.set(result+":"+col[17]+":"+sentiment.toString()+":"+computed);
 						context.write(t, v);
 					}
 					

@@ -7,6 +7,7 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,8 +25,10 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
 	Text v = new Text();
 	private HashMap<String, ArrayList<Double>> airlineMap = new HashMap<String, ArrayList<Double>>();
 	private HashMap<String, ArrayList<String>> tweetByKeyword = new HashMap<String, ArrayList<String>>();
-	int match = 0;
-	int mismatch = 0;
+	int positiveMatch = 0;
+	int positiveMismatch = 0;
+	int negativeMatch = 0;
+	int negativeMismatch = 0;
 	
 	private HashMap<String, ArrayList<Double>> airlineSentimentMap = new HashMap<String, ArrayList<Double>>();
 	
@@ -35,17 +38,31 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
 		String[] entry = key.toString().split(":");
 				
 		if(entry[0].equalsIgnoreCase("TRUST")){
-			String airline = entry[1];
-			ArrayList<Double> trustpoints = new ArrayList<Double>();
 			
+			ArrayList<Double> trustpoints = new ArrayList<Double>();
 			for(Text t: values){
-				if(t.toString().matches("[0-9.]*")){
-					trustpoints.add(Double.parseDouble(t.toString()));
+				
+				String[] parts = t.toString().split(":"); 
+				String airline = parts[0];
+				
+				
+				if(parts[1].matches("[0-9.]*")){
+				
+					if(airlineMap.containsKey(airline)){
+			    		ArrayList<Double> trustscore = (ArrayList<Double>) airlineMap.get(airline);
+			    		trustscore.add(Double.parseDouble(parts[1].toString()));
+			    		airlineMap.put(airline, trustscore);
+			    	}
+			    	else{
+			    		ArrayList<Double> trustscore = new ArrayList<Double>();
+			    		trustscore.add(Double.parseDouble(parts[1].toString()));
+			    		airlineMap.put(airline, trustscore);
+			    	}
 				}
+				
+				
 			}
-			if(trustpoints.size()>0){
-				airlineMap.put(airline,trustpoints);
-			}
+			
 		}
 		
 		else if(entry[0].equalsIgnoreCase("TWEET")){
@@ -73,13 +90,23 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
 		else if(entry[0].equalsIgnoreCase("SENTIWORD")){
 			for(Text t: values){
 				//Split tweet into array of string
-				String[] parts = t.toString().split(":"); //SENTIWORD has threes parts match:statesenti:calcdsenti
+				String[] parts = t.toString().split(":"); //SENTIWORD has 4 parts match:statesenti:calcdsenti:pos/neg
 				
 				if(parts[0].equalsIgnoreCase("match")){
-					match +=1;
+					if(parts[3].equalsIgnoreCase("positive")){
+						positiveMatch += 1;
+					}
+					else{
+						negativeMatch += 1;
+					}
 				}
 				else{
-					mismatch +=1;
+					if(parts[3].equalsIgnoreCase("positive")){
+						positiveMismatch += 1;
+					}
+					else{
+						negativeMismatch += 1;
+					}
 				}
 			}
 		}
@@ -108,17 +135,41 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
     public void cleanup(Context context) throws IOException, InterruptedException {
 		
 		//Phoebe's function for displaying the data -daniel
-		//trustpointCalculations(context);
-		task6(context);	
-		task8(context);
+		trustpointCalculations(context);
+		//task6(context);	
+		//task8(context);
 		
 		//airlineSentimentScores(context);
     }
 	
 	public void airlineSentimentScores(Context context) throws IOException, InterruptedException{
+		k.set("\n=========================== EXTRA ===========================\n");
+    	v.set("");
+    	context.write(k, v);
+		
 		final Set<String> airlineKeys = airlineSentimentMap.keySet();
+		DecimalFormat formatter = new DecimalFormat("#0.0000");
     	for (final String key : airlineKeys) {
 	    	ArrayList<Double> currentlist = (ArrayList<Double>) airlineSentimentMap.get(key);
+	    	Double sum=0.0;
+	    	for(Double entry : currentlist){
+	    		sum+=entry;
+	    	}
+	    	Double average = sum/currentlist.size();
+	    	/*
+	    	Collections.sort(currentlist);
+	    	Double median;
+	    	if(currentlist.size()%2==0){
+	    		median = (currentlist.get(currentlist.size()/2)+currentlist.get((currentlist.size()/2)-1))/2;
+	    	}
+	    	else{
+	    		median = currentlist.get(currentlist.size()/2);
+	    	}
+	    	*/
+	    	
+	    	k.set("\n"+key+"\tAverage: "+formatter.format(average));
+	    	v.set("");
+	    	context.write(k, v);
 	    }
 	}
 
@@ -147,10 +198,14 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
 	
 	public void task8(Context context) throws IOException, InterruptedException{
 		k.set("\n=========================== TASK 8 ===========================");
-		if((match+mismatch)>0){
-			v.set("\nMatch Rate: "+String.valueOf(match*100/(match+mismatch))+"%\nMatches: "+String.valueOf(match)+"\nMismatches: "+String.valueOf(mismatch));
+		String output = "";
+		if((positiveMatch+positiveMismatch)>0){
+			output += "\nPositive Accuracy: "+String.valueOf(positiveMatch*100/(positiveMatch+positiveMismatch))+"%\nPositive Matches: "+String.valueOf(positiveMatch)+"\nPositve Mismatches: "+String.valueOf(positiveMismatch);
 		}
-		else { v.set("\nInsufficient data");}
+		if((negativeMatch+negativeMismatch)>0){
+			output += "\nNegative Accuracy: "+String.valueOf(negativeMatch*100/(negativeMatch+negativeMismatch))+"%\nNegative Matches: "+String.valueOf(negativeMatch)+"\nNegative Mismatches: "+String.valueOf(negativeMismatch);
+		}
+		v.set(output);
 		context.write(k, v);
 	}
 
@@ -175,10 +230,19 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
 	    	//				- daniel
 	    	
 	    	
+	    	Collections.sort(trustpoints);
+	    	Double median;
+	    	if(trustpoints.size()%2==0){
+	    		median = (trustpoints.get(trustpoints.size()/2)+trustpoints.get((trustpoints.size()/2)-1))/2;
+	    	}
+	    	else{
+	    		median = trustpoints.get(trustpoints.size()/2);
+	    	}
 	    	
 	    	
 	    	
-	    	Double median = 0.0;//placeholder
+	    	
+	    	//Double median = 0.0;//placeholder
 	    	//=============================================================================
 	    	
 	    	
