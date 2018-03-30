@@ -1,7 +1,8 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException; 
+import java.io.IOException;
+import java.net.URI;
 import java.util.Date; 
 
 import org.apache.hadoop.conf.Configuration; 
@@ -61,8 +62,10 @@ public class TwitterAnalytics {
 		tweetJob.setReducerClass(TweetReducer.class); 
 		tweetJob.setOutputKeyClass(Text.class); 
 		tweetJob.setOutputValueClass(Text.class); 
-		inputPath = new Path("hdfs://localhost:9000/user/project/input/"); 
-		outputPath = new Path("hdfs://localhost:9000/user/project/tweets/");
+		Path inputPath = new Path("hdfs://localhost:9000/user/project/input/"); 
+		tweetJob.addCacheFile(new URI("hdfs://localhost:9000/user/project/SentiWordNet.txt"));
+		
+		Path outputPath = new Path("hdfs://localhost:9000/user/project/tweets/");
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 		FileInputFormat.addInputPath(tweetJob, inputPath);
 		FileOutputFormat.setOutputPath(tweetJob, outputPath);
