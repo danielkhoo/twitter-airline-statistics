@@ -136,7 +136,7 @@ public class TweetMapper extends Mapper <LongWritable, Text, Text, Text> {
 				//Send Tweets
 				if(!col[21].isEmpty()){
 					String[] airlinelist = {"@united","@southwest","@jetblue","@virginamerica","@delta","@usairways","@americanair"};
-					String[] searchlist = {"delayed","delay","miss"};
+					String[] searchlist = {"delayed","miss","cancelled","lost","damaged","angry","disappointed" };
 				
 					
 					String[] tweet = col[21].split(" ");
@@ -151,7 +151,8 @@ public class TweetMapper extends Mapper <LongWritable, Text, Text, Text> {
 						for(String searchTerm: searchlist){
 							if(word.trim().contains(searchTerm)){
 								t.set("TWEET");
-								v.set(searchTerm+":"+col[21]+":"+sentiment.toString());
+								//v.set(searchTerm+":"+col[21]+":"+sentiment.toString());
+								v.set(searchTerm);
 								context.write(t, v);
 							}
 						}

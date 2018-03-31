@@ -1,4 +1,7 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.Hashtable;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -10,6 +13,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 public class AnalysisMapper extends Mapper <LongWritable, Text, Text, Text> {
 	Text t = new Text();
 	Text v = new Text();
+	
+
+	
 	@Override
 	protected void map(LongWritable key, Text value,
 			Mapper<LongWritable, Text, Text, Text>.Context context)
