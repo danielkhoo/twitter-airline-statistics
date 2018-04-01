@@ -26,20 +26,36 @@ public class AnalysisMapper extends Mapper <LongWritable, Text, Text, Text> {
 				t.set("SENTIMENT");
 				v.set(entry[0]+":"+entry[1]);
 				context.write(t, v);
+				
+				t.set("NEGATIVEBYAIRLINE");//send sentiment data to reducer for extra
+				v.set(entry[0]+"::"+entry[1]);
+				context.write(t, v);
 			}
 			else if(entry[0].equalsIgnoreCase("AIRLINE-NEUTRAL")){
 				t.set("SENTIMENT");
 				v.set(entry[0]+":"+entry[1]);
+				context.write(t, v);
+				
+				t.set("NEGATIVEBYAIRLINE");
+				v.set(entry[0]+"::"+entry[1]);
 				context.write(t, v);
 			}
 			else if(entry[0].equalsIgnoreCase("COUNTRY-POSITIVE")){
 				t.set("SENTIMENT");
 				v.set(entry[0]+":"+entry[1]);
 				context.write(t, v);
+				
+				t.set("NEGATIVEBYCOUNTRY");
+				v.set(entry[0]+"::"+entry[1]);
+				context.write(t, v);
 			}
 			else if(entry[0].equalsIgnoreCase("COUNTRY-NEUTRAL")){
 				t.set("SENTIMENT");
 				v.set(entry[0]+":"+entry[1]);
+				context.write(t, v);
+				
+				t.set("NEGATIVEBYCOUNTRY");
+				v.set(entry[0]+"::"+entry[1]);
 				context.write(t, v);
 			}
 			
@@ -47,15 +63,11 @@ public class AnalysisMapper extends Mapper <LongWritable, Text, Text, Text> {
 			//Form k[entry[0]:entry[1]] v[entry[2]]  to k[entry[0]] v[entry1:entry2]
 			
 			else if(entry[0].equalsIgnoreCase("NEGATIVEBYAIRLINE")){
-				//t.set(entry[0]+":"+entry[1]);
-				//v.set(entry[2]);
 				t.set(entry[0]);
 				v.set(entry[1]+":"+entry[2]);
 				context.write(t, v);
 			}
 			else if(entry[0].equalsIgnoreCase("NEGATIVEBYCOUNTRY")){
-				//t.set(entry[0]+":"+entry[1]);
-				//v.set(entry[2]);
 				t.set(entry[0]);
 				v.set(entry[1]+":"+entry[2]);
 				context.write(t, v);

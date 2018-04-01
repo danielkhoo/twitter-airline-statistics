@@ -1,3 +1,14 @@
+/*
+ 	* Class name: TwitterAnalytics (Driver Class)
+ 	* 
+ 	* Done by: Daniel
+ 	* 
+ 	* Description:
+ 	* This is the reducer for aggregating all the values that need counting, 
+ 	* it receives the values and sums them for all our tasks
+ 	* 
+ 	* 
+*/
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;

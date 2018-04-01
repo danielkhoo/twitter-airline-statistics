@@ -68,32 +68,48 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		
 		if(entry[0].equalsIgnoreCase("NEGATIVEBYAIRLINE")){
 			
-			
 			for(Text t: values){
 				String[] parts = t.toString().split(":");
-				String airline = parts[0];
 				
-				String[] subValues = parts[1].split("\t");
-				String issue = subValues[0];
-				int total = Integer.valueOf(subValues[1]);
-				
-				//Add to hashmap of discrete reasons
-				if(!reasonsMap.containsKey(issue)){
-					reasonsMap.put(issue,1);
-				}
-				
-				//Add to individual airline hashmaps
-				if(airlineMap.containsKey(airline)){
-					HashMap<String,Integer> negativeReasonMap = (HashMap) airlineMap.get(airline);
-					negativeReasonMap.put(issue, total);
-					airlineMap.put(airline,negativeReasonMap);
+				//This sends positive and neutral values to the reducer for task 1
+				if(parts.length==3){//AIRLINE-NEUTRAL::airline\tcount
+					String split[] = parts[2].toString().split("\t");
+					int total = Integer.valueOf(split[1]);
+					
+					if(parts[0].equalsIgnoreCase("AIRLINE-POSITIVE")){
+						positiveByAirlineMap.put(split[0], total);
+					}
+					else if(parts[0].equalsIgnoreCase("AIRLINE-NEUTRAL")){
+						neutralByAirlineMap.put(split[0], total);
+					}
 				}
 				else{
-					//Create new key
-					HashMap<String,Integer> negativeReasonMap = new HashMap<String, Integer>();
-					negativeReasonMap.put(issue, total);
-					airlineMap.put(airline,negativeReasonMap);
+					String airline = parts[0];
+					
+					String[] subValues = parts[1].split("\t");
+					String issue = subValues[0];
+					int total = Integer.valueOf(subValues[1]);
+					
+					//Add to hashmap of discrete reasons
+					if(!reasonsMap.containsKey(issue)){
+						reasonsMap.put(issue,1);
+					}
+					
+					//Add to individual airline hashmaps
+					if(airlineMap.containsKey(airline)){
+						HashMap<String,Integer> negativeReasonMap = (HashMap) airlineMap.get(airline);
+						negativeReasonMap.put(issue, total);
+						airlineMap.put(airline,negativeReasonMap);
+					}
+					else{
+						//Create new key
+						HashMap<String,Integer> negativeReasonMap = new HashMap<String, Integer>();
+						negativeReasonMap.put(issue, total);
+						airlineMap.put(airline,negativeReasonMap);
+					}
 				}
+				
+				
 				
 				
 			}
@@ -102,29 +118,45 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 		else if (entry[0].equalsIgnoreCase("NEGATIVEBYCOUNTRY")){ 	
 			for(Text t: values){
 				String[] parts = t.toString().split(":");
-				String country = parts[0];
 				
-				String[] subValues = parts[1].toString().split("\t");
-				String issue = subValues[0];
-				int total = Integer.valueOf(subValues[1]);
+				if(parts.length==3){//AIRLINE-NEUTRAL::airline\tcount
+					String split[] = parts[2].toString().split("\t");
+					int total = Integer.valueOf(split[1]);
 					
-				//Add to individual country hashmaps
-				if(countryMap.containsKey(country)){
-					HashMap<String,Integer> reasonsSingleCountryMap = (HashMap) countryMap.get(country);
-					reasonsSingleCountryMap.put(issue, total);
-					countryMap.put(country,reasonsSingleCountryMap);
-					
-					int tempCount = totalReasonsByCountryMap.get(country);
-					totalReasonsByCountryMap.put(country, total+tempCount);
+					if(parts[0].equalsIgnoreCase("COUNTRY-POSITIVE")){
+						positiveByCountry.put(split[0], total);
+					}
+					else if(parts[0].equalsIgnoreCase("COUNTRY-NEUTRAL")){
+						neutralByCountry.put(split[0], total);
+					}
 				}
 				else{
-					//Create new key
-					HashMap<String,Integer> reasonsSingleCountryMap = new HashMap<String, Integer>();
-					reasonsSingleCountryMap.put(issue, total);
-					countryMap.put(country,reasonsSingleCountryMap);
+					String country = parts[0];
 					
-					totalReasonsByCountryMap.put(country, total);
+					String[] subValues = parts[1].toString().split("\t");
+					String issue = subValues[0];
+					int total = Integer.valueOf(subValues[1]);
+						
+					//Add to individual country hashmaps
+					if(countryMap.containsKey(country)){
+						HashMap<String,Integer> reasonsSingleCountryMap = (HashMap) countryMap.get(country);
+						reasonsSingleCountryMap.put(issue, total);
+						countryMap.put(country,reasonsSingleCountryMap);
+						
+						int tempCount = totalReasonsByCountryMap.get(country);
+						totalReasonsByCountryMap.put(country, total+tempCount);
+					}
+					else{
+						//Create new key
+						HashMap<String,Integer> reasonsSingleCountryMap = new HashMap<String, Integer>();
+						reasonsSingleCountryMap.put(issue, total);
+						countryMap.put(country,reasonsSingleCountryMap);
+						
+						totalReasonsByCountryMap.put(country, total);
+					}
 				}
+				
+				
 			}
 		}
 		else if (entry[0].equalsIgnoreCase("SENTIMENT")){
@@ -291,13 +323,13 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 			    JSONObject neu = new JSONObject();
 			    JSONObject neg = new JSONObject();
 			    if(positiveByAirlineMap.containsKey(airline)){
-			    	pos.put("POSITVE", positiveByAirlineMap.get(airline).toString());
+			    	pos.put("POSITVE", positiveByAirlineMap.get(airline));
 			    }
 			    else{
 			    	pos.put("POSITVE", 0);
 			    }
 			    if(neutralByAirlineMap.containsKey(airline)){
-			    	neu.put("NEUTRAL", neutralByAirlineMap.get(airline).toString());
+			    	neu.put("NEUTRAL", neutralByAirlineMap.get(airline));
 			    }
 			    else{
 			    	neu.put("NEUTRAL", 0);
@@ -483,7 +515,7 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 			    	reason=key;
 			    	if(reason.equalsIgnoreCase("CSProblem")  || reason.equalsIgnoreCase("badflight")){
 				    	JSONObject nrObj = new JSONObject();
-				    	nrObj.put(reason,currentMap.get(key).toString());
+				    	nrObj.put(reason,currentMap.get(key));
 				    	nrArr.put(nrObj);
 			    	}
 			    	

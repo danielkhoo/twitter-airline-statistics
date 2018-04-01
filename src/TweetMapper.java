@@ -123,6 +123,24 @@ public class TweetMapper extends Mapper <LongWritable, Text, Text, Text> {
 				throws IOException, InterruptedException {
 			String[] col = value.toString().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 			
+			if (col.length == 25) {
+				String[] tmp = new String[27];
+				for (int index = 0; index < col.length; index++) {
+					tmp[index] = col[index];
+				}
+				tmp[25] = " ";
+				tmp[26] = " ";
+				col = tmp;
+			} else if (col.length == 26) {
+				String[] tmp = new String[27];
+				for (int index = 0; index < col.length; index++) {
+					tmp[index] = col[index];
+				}
+				tmp[26] = " ";
+				col = tmp;
+			}
+			
+			
 			if(col.length==27){//only accept properly formed data
 				
 				

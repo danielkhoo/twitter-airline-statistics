@@ -1,3 +1,14 @@
+/*
+ 	* Class name: RawDataMapper (Mapper Class 1)
+ 	* 
+ 	* Done by: Daniel
+ 	* 
+ 	* Description:
+ 	* This is the mapper for tagging all the values that need counting, 
+ 	* it sets the relevant flags to redirect inputs to reducers
+ 	* for all our tasks
+ 	* 
+*/
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
@@ -15,6 +26,24 @@ public class RawDataMapper extends Mapper <LongWritable, Text, Text, IntWritable
 			Mapper<LongWritable, Text, Text, IntWritable>.Context context)
 				throws IOException, InterruptedException {
 			String[] col = value.toString().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+			
+			//This code to try and repair cases where the last 2 cols are missing and at least get the other fields
+			if (col.length == 25) {
+				String[] tmp = new String[27];
+				for (int index = 0; index < col.length; index++) {
+					tmp[index] = col[index];
+				}
+				tmp[25] = " ";
+				tmp[26] = " ";
+				col = tmp;
+			} else if (col.length == 26) {
+				String[] tmp = new String[27];
+				for (int index = 0; index < col.length; index++) {
+					tmp[index] = col[index];
+				}
+				tmp[26] = " ";
+				col = tmp;
+			}
 			
 			if(col.length==27){//only accept properly formed data
 				String sentiment = col[14];
