@@ -1,3 +1,14 @@
+/*
+ 	* Class name: AnalysisReducer (Reducer 2)
+ 	* 
+ 	* Done by: Daniel, Phoebe, YanHsia 
+ 	* 
+ 	* Description:
+ 	* This is the reducer responsible for generating the final output for
+ 	* tasks 1, 2, 3, 4 and 7. Along with several task 9 extra features such as sentiment comparison built in.
+ 	* It reads in the data from the /temp folder and outputs the the /output folder
+ 	* 
+*/
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -44,6 +55,7 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 	
 	private Hashtable countryCodes = new Hashtable<String, String>();
 	
+	private boolean isTask4 = false;
 	
 	protected void setup() throws IOException, InterruptedException {
 		BufferedReader br =new BufferedReader(new FileReader("ISO-3166-alpha3.tsv"));
@@ -63,11 +75,10 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 	
 	@Override
 	protected void reduce(Text key, Iterable<Text> values, Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
-	
+		
 		String[] entry = key.toString().split(":");
 		
 		if(entry[0].equalsIgnoreCase("NEGATIVEBYAIRLINE")){
-			
 			for(Text t: values){
 				String[] parts = t.toString().split(":");
 				
@@ -115,7 +126,7 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 			}
 		}
 		//KEY: NEGATIVEBYCOUNTRY:[Code]		VALUE:[Reason] [count]
-		else if (entry[0].equalsIgnoreCase("NEGATIVEBYCOUNTRY")){ 	
+		else if (entry[0].equalsIgnoreCase("NEGATIVEBYCOUNTRY")){ 
 			for(Text t: values){
 				String[] parts = t.toString().split(":");
 				
@@ -160,6 +171,7 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 			}
 		}
 		else if (entry[0].equalsIgnoreCase("SENTIMENT")){
+			isTask4 = true;
 			for(Text t: values){
 				String[] parts = t.toString().split(":");
 				String split[] = parts[1].toString().split("\t");
@@ -193,27 +205,28 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 	
 	@Override
     public void cleanup(Context context) throws IOException, InterruptedException {
-		setup();
+		setup();//loads the ISO country codes
 		//check if there is a any values in the relevant hashmap before calling the display function.
 		
 		//Task 1 
 		if(!airlineMap.isEmpty()){
-			//displayAirlineData(context);
-			task1JSON(context);
+			displayAirlineData(context);
+			//task1JSON(context);
 		}
+		//Task 2 & 3
 		if(!totalReasonsByCountryMap.isEmpty()){
-			//displayCountryData(context);
-			task23JSON(context);
+			displayCountryData(context);
+			//task23JSON(context);
 		}
-		
-		if(!positiveByAirlineMap.isEmpty()){
-			//top3Airlines(context);
-			task4JSON(context);
+		//Task 4
+		if(isTask4){
+			top3Airlines(context);
+			//task4JSON(context);
 		}
-		
+		//Task 7
 		if(!IPAddressMap.isEmpty()){
-			//ipAddresses(context);
-			task7JSON(context);
+			ipAddresses(context);
+			//task7JSON(context);
 		}
 		
 		
@@ -367,83 +380,82 @@ public class AnalysisReducer extends Reducer<Text, Text, Text, Text> {
 	}
 	
 	public void displayCountryData(Context context) throws IOException, InterruptedException{
+		k.set("\n=========================== TASK 2 & 3 ===========================\nNumber of Countries");
+    	v.set(String.valueOf(countryMap.size()));
+    	context.write(k, v);
     	
-				k.set("\n=========================== TASK 2 & 3 ===========================\nNumber of Countries");
-		    	v.set(String.valueOf(countryMap.size()));
-		    	context.write(k, v);
+    	LinkedHashMap<String,Integer> sortedTotalsMap = sortHashMapByValues(totalReasonsByCountryMap);
+    	final Set<String> totalsKeys = sortedTotalsMap.keySet();
+    	List<String> totalsList = new ArrayList<String>();
+    	for (final String key : totalsKeys) {
+	    	totalsList.add(key);
+	    }
+	    Collections.reverse(totalsList);
+    	String topCountry = totalsList.get(0);
+    	k.set("Country with most complains: "+countryCodes.get(topCountry));
+    	v.set(String.valueOf(totalReasonsByCountryMap.get(topCountry)));
+    	context.write(k, v);
+    	
+    	for (final String countrykey : totalsList) {
+	        
+	        HashMap<String,Integer> currentMap = (HashMap<String,Integer>)countryMap.get(countrykey);
+	        
+	        LinkedHashMap<String,Integer> sortedMap = sortHashMapByValues(currentMap);
+	        int counter = 0;
+	        int subTotal = 0;
+		    
+		    final Set<String> keys = sortedMap.keySet();
+		    List<String> list = new ArrayList<String>();
+		    
+		    //Get just the bottom 5 aka the largest values in the sortedHashmap
+		    for (final String key : keys) {
+		    	list.add(key);
+		    	subTotal+=Integer.valueOf((int)sortedMap.get(key));
+		    	counter++;
+		    }
+		    Collections.reverse(list); //reverse to show top 5 in decreasing order
+		    
+		   
+		    
+		    k.set("====="+countryCodes.get(countrykey)+"=====");
+		    v.set("");
+		    context.write(k, v);
+		    
+		    k.set("Positive");
+		    if(positiveByCountry.containsKey(countrykey)){
+		    	int num = (int) positiveByCountry.get(countrykey);
+		    	v.set(String.valueOf(num));
+		    }
+		    else{
+		    	v.set("0");
+		    }
+		    context.write(k, v);
+		    
+		    k.set("Neutral");
+		    if(neutralByCountry.containsKey(countrykey)){
+		    	int num = (int) neutralByCountry.get(countrykey);
+		    	v.set(String.valueOf(num));
+		    }
+		    else{
+		    	v.set("0");
+		    }
+		    context.write(k, v);
+		    
+		    k.set("Negative");
+		    v.set(String.valueOf(subTotal));
+		    context.write(k, v);
+		    
+		    String reason="";
+		    for(final String key : list){
+		    	reason=key;
+		    	if(reason.equalsIgnoreCase("CSProblem")  || reason.equalsIgnoreCase("badflight")){
+		    		k.set("-"+reason);//show problem eg CSProblem with counter
+			    	v.set(currentMap.get(key).toString()); //show number of problems found
+			    	context.write(k, v);
+		    	}
 		    	
-		    	LinkedHashMap<String,Integer> sortedTotalsMap = sortHashMapByValues(totalReasonsByCountryMap);
-		    	final Set<String> totalsKeys = sortedTotalsMap.keySet();
-		    	List<String> totalsList = new ArrayList<String>();
-		    	for (final String key : totalsKeys) {
-			    	totalsList.add(key);
-			    }
-			    Collections.reverse(totalsList);
-		    	String topCountry = totalsList.get(0);
-		    	k.set("Country with most complains: "+countryCodes.get(topCountry));
-		    	v.set(String.valueOf(totalReasonsByCountryMap.get(topCountry)));
-		    	context.write(k, v);
-		    	
-		    	for (final String countrykey : totalsList) {
-			        
-			        HashMap<String,Integer> currentMap = (HashMap<String,Integer>)countryMap.get(countrykey);
-			        
-			        LinkedHashMap<String,Integer> sortedMap = sortHashMapByValues(currentMap);
-			        int counter = 0;
-			        int subTotal = 0;
-				    
-				    final Set<String> keys = sortedMap.keySet();
-				    List<String> list = new ArrayList<String>();
-				    
-				    //Get just the bottom 5 aka the largest values in the sortedHashmap
-				    for (final String key : keys) {
-				    	list.add(key);
-				    	subTotal+=Integer.valueOf((int)sortedMap.get(key));
-				    	counter++;
-				    }
-				    Collections.reverse(list); //reverse to show top 5 in decreasing order
-				    
-				   
-				    
-				    k.set("====="+countryCodes.get(countrykey)+"=====");
-				    v.set("");
-				    context.write(k, v);
-				    
-				    k.set("Positive");
-				    if(positiveByCountry.containsKey(countrykey)){
-				    	int num = (int) positiveByCountry.get(countrykey);
-				    	v.set(String.valueOf(num));
-				    }
-				    else{
-				    	v.set("0");
-				    }
-				    context.write(k, v);
-				    
-				    k.set("Neutral");
-				    if(neutralByCountry.containsKey(countrykey)){
-				    	int num = (int) neutralByCountry.get(countrykey);
-				    	v.set(String.valueOf(num));
-				    }
-				    else{
-				    	v.set("0");
-				    }
-				    context.write(k, v);
-				    
-				    k.set("Negative");
-				    v.set(String.valueOf(subTotal));
-				    context.write(k, v);
-				    
-				    String reason="";
-				    for(final String key : list){
-				    	reason=key;
-				    	if(reason.equalsIgnoreCase("CSProblem")  || reason.equalsIgnoreCase("badflight")){
-				    		k.set("-"+reason);//show problem eg CSProblem with counter
-					    	v.set(currentMap.get(key).toString()); //show number of problems found
-					    	context.write(k, v);
-				    	}
-				    	
-				    }
-			    }
+		    }
+	    }
 	}
 	
 	public void task23JSON(Context context) throws IOException, InterruptedException{

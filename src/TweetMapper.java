@@ -1,3 +1,18 @@
+/*
+ 	* Class name: TweetMapper (Mapper 3)
+ 	* 
+ 	* Done by: Daniel, Joey, Phoebe
+ 	* 
+ 	* Description:
+ 	* Handles the tasks which don't require count instead some operations on content.
+ 	* This is the Mapper responsible for handling tasks 5, 6, 8 and some task 9 extra
+ 	* It is independent of the other 2 map reducer jobs.
+ 	* It reads in the data from the /input folder and outputs the the /tweets folder
+ 	* 
+ 	* Notably, this mapper incorporates the SentiWordNet code to get the sentiment
+ 	* value of each word in a tweet. This is done on map-side for maximum efficiency.
+ 	* 
+*/
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;

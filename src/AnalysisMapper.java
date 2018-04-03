@@ -1,3 +1,15 @@
+/*
+ 	* Class name: AnalysisMapper (Mapper Class 2)
+ 	* 
+ 	* Done by: Daniel, Phoebe, YanHsia
+ 	* 
+ 	* Description:
+ 	* This is the mapper for assembling the various subtotals to fulfill
+ 	* tasks 1, 2, 3, 4 and 7. Along with extra feature which sends sentiment by country / airline.
+ 	* 
+ 	* 
+ 	* 
+*/
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -60,8 +72,6 @@ public class AnalysisMapper extends Mapper <LongWritable, Text, Text, Text> {
 			}
 			
 			//Change Negative by airline as the sole flag so they all go to the same reducer
-			//Form k[entry[0]:entry[1]] v[entry[2]]  to k[entry[0]] v[entry1:entry2]
-			
 			else if(entry[0].equalsIgnoreCase("NEGATIVEBYAIRLINE")){
 				t.set(entry[0]);
 				v.set(entry[1]+":"+entry[2]);

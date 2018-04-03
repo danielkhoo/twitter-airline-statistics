@@ -1,3 +1,15 @@
+/*
+ 	* Class name: TweetReducer (Reducer 3)
+ 	* 
+ 	* Done by: Daniel, Joey, Phoebe
+ 	* 
+ 	* Description:
+ 	* Handles the tasks which don't require count instead some operations on content.
+ 	* This is the reducer responsible for handling tasks 5, 6, 8 and some task 9 extra
+ 	* It is independent of the other 2 map reducer jobs.
+ 	* It reads in the data from the /input folder and outputs the the /tweets folder
+ 	* 
+*/
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -149,22 +161,22 @@ public class TweetReducer extends Reducer<Text, Text, Text, Text> {
     public void cleanup(Context context) throws IOException, InterruptedException {
 		
 		if(airlineMap.size()>0){
-			//trustpointCalculations(context);
-			task5JSON(context);
+			trustpointCalculations(context);
+			//task5JSON(context);
 		}
 		
 		if(tweetByKeyword.size()>0){
-			//task6(context);	
-			task6JSON(context);
+			task6(context);	
+			//task6JSON(context);
 		}
 		
 		if(isTask8){
-			//task8(context);
-			task8JSON(context);
+			task8(context);
+			//task8JSON(context);
 		}
 		if(!airlineSentimentMap.isEmpty()){
-			//airlineSentimentScores(context);
-			extraJSON(context);
+			airlineSentimentScores(context);
+			//extraJSON(context);
 		}
 		
     }

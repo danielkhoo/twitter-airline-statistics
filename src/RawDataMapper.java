@@ -6,7 +6,9 @@
  	* Description:
  	* This is the mapper for tagging all the values that need counting, 
  	* it sets the relevant flags to redirect inputs to reducers
- 	* for all our tasks
+ 	* for all our tasks.
+ 	* 
+ 	* 
  	* 
 */
 import java.io.IOException;
